@@ -37,10 +37,33 @@ def getAverage(valuesArray):
 
   return total / len(valuesArray)
 
-def addHeaders(excelSheet):
+def addTarHeaders(excelSheet):
   excelSheet.write(0, 0, 'Final tar yield (kg)')
   excelSheet.write(0, 1, 'Actual residence time (s)')
   excelSheet.write(0, 2, 'Heating rate (K/s)')
   excelSheet.write(0, 3, 'Nitrogen Flowrate (kg/s)')
   excelSheet.write(0, 4, 'Diesel flowrate (kg/s)')
   return excelSheet
+
+def addHeatingRateHeaders(excelSheet):
+  excelSheet.write(0, 0, 'Heating Rate (K/s)')
+  excelSheet.write(0, 1, 'Current T (K)')
+  excelSheet.write(0, 2, 'Diesel Flowrate (kg/s)')
+  excelSheet.write(0, 3, 'Nitrogen Flowrate (kg/s)')
+  excelSheet.write(0, 4, 'Biomass mass (kg)')
+  excelSheet.write(0, 5, 'Char mass (kg)')
+  return excelSheet
+
+def splitData(data):
+  datasetA = []
+  datasetB = []
+
+  alternatingIndex = 2
+  for datum in data:
+    if alternatingIndex % 2 == 0:
+      datasetA.append(datum)
+    else:
+      datasetB.append(datum)
+    alternatingIndex += 1
+
+  return [datasetA, datasetB]

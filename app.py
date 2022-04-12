@@ -3,10 +3,10 @@ from scipy.integrate import odeint
 import numpy as numpy
 import matplotlib.pyplot as plot
 from math import exp
-from helpers import *
-from constants import *
+from services.helpers import *
+from services.constants import *
 import xlsxwriter
-from unbiasednessCriterion import calcUc
+from ucMain import calcUc
 
 dieselValue = []
 
@@ -143,9 +143,9 @@ book = xlsxwriter.Workbook('Input_Output.xlsx')
 sheet1 = book.add_worksheet("dataset A")
 sheet2 = book.add_worksheet("dataset B")
 sheet3 = book.add_worksheet("main")
-addHeaders(sheet1)
-addHeaders(sheet2)
-addHeaders(sheet3)
+addTarHeaders(sheet1)
+addTarHeaders(sheet2)
+addTarHeaders(sheet3)
 row1 = 1
 row2 = 1
 row3 = 1

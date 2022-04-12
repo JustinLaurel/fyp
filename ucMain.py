@@ -1,16 +1,16 @@
-yInterceptA = 1.899165755
+yInterceptA = 1.905805554
 heatingRateCoefA = 0
-mNitrogenCoefA = -1.268341848
+mNitrogenCoefA = -1.275120051
 
-yInterceptB = 1.910339453
+yInterceptB = 1.907931667
 heatingRateCoefB = 0
-mNitrogenCoefB = -1.280424345
+mNitrogenCoefB = -1.277328737
 
 def yAcalc(heatingRate, mNitrogen):
-  return heatingRateCoefA*heatingRate - mNitrogenCoefA*mNitrogen + yInterceptA
+  return heatingRateCoefA*heatingRate + mNitrogenCoefA*mNitrogen + yInterceptA
 
 def yBcalc(heatingRate, mNitrogen):
-  return heatingRateCoefB*heatingRate - mNitrogenCoefB*mNitrogen + yInterceptB
+  return heatingRateCoefB*heatingRate + mNitrogenCoefB*mNitrogen + yInterceptB
 
 def calcUc(datasetA, datasetB):
   HEATING_RATE = 0

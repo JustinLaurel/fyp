@@ -3,10 +3,10 @@ from scipy.integrate import odeint
 import numpy as numpy
 import matplotlib.pyplot as plot
 from math import exp
-from helpers import *
-from constants import *
+from services.helpers import *
+from services.constants import *
 import xlsxwriter
-from unbiasednessCriterion import calcUc
+from ucMain import calcUc
 
 nitrogenFlowrates = []  # kg/s
 dieselFlowrates = []    # kg/s
@@ -100,7 +100,7 @@ def odes(
 
 # constants
 biomassMass = 1.5
-timeRangeSeconds = 5
+timeRangeSeconds = 4
 initialTemp = 293
 
 # initial conditions
@@ -117,18 +117,18 @@ x0 = [  #Composition @ t=0, kg
 ]
 
 # time vector (time window)
-t = numpy.linspace(0, timeRangeSeconds, 100)
+t = numpy.linspace(0, timeRangeSeconds, 80)
 
-heatingRateLinspace = numpy.linspace(150, 250, 500)
+heatingRateLinspace = numpy.linspace(150, 250, 2500)
 
 #Excel initialization
 book = xlsxwriter.Workbook('Heating_Rate.xlsx')
 sheet1 = book.add_worksheet("dataset A")
 sheet2 = book.add_worksheet("dataset B")
 sheet3 = book.add_worksheet("main")
-addHeaders(sheet1)
-addHeaders(sheet2)
-addHeaders(sheet3)
+addTarHeaders(sheet1)
+addTarHeaders(sheet2)
+addTarHeaders(sheet3)
 row1 = 1
 row2 = 1
 row3 = 1
