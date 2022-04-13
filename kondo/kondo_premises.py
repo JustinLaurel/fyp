@@ -5,7 +5,6 @@ from helpers import *
 
 file = pandas.ExcelFile(r'C:\Users\Spring\Desktop\heatingRateModel\kondo.xlsx')
 data = pandas.read_excel(file, 'main').values
-print(data)
 
 X1_INDEX = 0
 X2_INDEX = 1
@@ -144,6 +143,8 @@ fuzzySetsX3 = [
   [5, 3.5, 2.5]
 ]
 SELECTED_X = X3_INDEX
+L = 5 # Anywhere between 2*Range and 1*Range
+print(str(fuzzySetsX3))
 
 for datum in data:
   x1 = datum[X1_INDEX]
@@ -206,7 +207,6 @@ for datum in data:
 
   if (wm0 == 0) | (wn0 == 0):
     #Calculate beta
-    L = 5 # Anywhere between 2*Range and 1*Range
     pWithZeroMembership = None
     if (wm0 == 0): pWithZeroMembership = selectedFuzzySet[0][ZERO_MEMBERSHIP_TERM]
     else: pWithZeroMembership = selectedFuzzySet[1][ZERO_MEMBERSHIP_TERM]
@@ -224,6 +224,7 @@ for datum in data:
 
       selectedFuzzySet[0][ZERO_MEMBERSHIP_TERM] += deltaPm
       selectedFuzzySet[1][ONE_MEMBERSHIP_TERM] += deltaPn
+      print('hello')
     elif (wn0 == 0):
       pm = selectedFuzzySet[0][ONE_MEMBERSHIP_TERM]
       pn = selectedFuzzySet[1][ZERO_MEMBERSHIP_TERM]
@@ -232,24 +233,26 @@ for datum in data:
 
       selectedFuzzySet[0][ONE_MEMBERSHIP_TERM] += deltaPm
       selectedFuzzySet[1][ZERO_MEMBERSHIP_TERM] += deltaPn
+      print('hi')
   
-  else: #Both wm0 and wn0 are > 0
-    wmNewMembershipTerm = calcNewOneMembershipTerm(
-      selectedFuzzySet[0],
-      selectedX,
-      wmTilde
-    )
-    wnNewMembershipTerm = calcNewOneMembershipTerm(
-      selectedFuzzySet[1],
-      selectedX,
-      wnTilde
-    )
+  # # if (wm0 != 0) & (wn0 != 0):
+  # else: #Both wm0 and wn0 are > 0
+  #   wmNewMembershipTerm = calcNewOneMembershipTerm(
+  #     selectedFuzzySet[0],
+  #     selectedX,
+  #     wmTilde
+  #   )
+  #   wnNewMembershipTerm = calcNewOneMembershipTerm(
+  #     selectedFuzzySet[1],
+  #     selectedX,
+  #     wnTilde
+  #   )
 
-    if (wmTilde >= 0.5): selectedFuzzySet[0][ONE_MEMBERSHIP_TERM] = wmNewMembershipTerm
-    elif (wmTilde < 0.5): selectedFuzzySet[0][ZERO_MEMBERSHIP_TERM] = wmNewMembershipTerm
+  #   if (wmTilde >= 0.5): selectedFuzzySet[0][ONE_MEMBERSHIP_TERM] = wmNewMembershipTerm
+  #   elif (wmTilde < 0.5): selectedFuzzySet[0][ZERO_MEMBERSHIP_TERM] = wmNewMembershipTerm
 
-    if (wnTilde >= 0.5): selectedFuzzySet[1][ONE_MEMBERSHIP_TERM] = wnNewMembershipTerm
-    elif(wnTilde < 0.5): selectedFuzzySet[1][ZERO_MEMBERSHIP_TERM] = wnNewMembershipTerm
+  #   if (wnTilde >= 0.5): selectedFuzzySet[1][ONE_MEMBERSHIP_TERM] = wnNewMembershipTerm
+  #   elif(wnTilde < 0.5): selectedFuzzySet[1][ZERO_MEMBERSHIP_TERM] = wnNewMembershipTerm
 
 
   # fuzzy set parameter adjustment ends here

@@ -1,27 +1,25 @@
-yInterceptA = 356.9462623
+yInterceptA = -74.06494835
 currentTempCoefA = -0.572109952
 dieselFlowCoefA = 13264.89424
-nitrogenFlowCoefA = -20.40010245
 biomassMassCoefA = -135.3764743
 charMassCoefA = -160.6001534
 
-yInterceptB = 359.3426031
+yInterceptB = -73.11675143
 currentTempCoefB = -0.567786812
 dieselFlowCoefB = 13027.81686
-nitrogenFlowCoefB = -21.40536397
 biomassMassCoefB = -131.3458291
 charMassCoefB = -155.1985973
 
-def yAcalc(currentTemp, dieselFlow, nitrogenFlow, biomassMass, charMass):
-  return currentTempCoefA*currentTemp + dieselFlowCoefA*dieselFlow + nitrogenFlowCoefA*nitrogenFlow + biomassMassCoefA*biomassMass + charMassCoefA*charMass + yInterceptA
+def yAcalc(currentTemp, dieselFlow, biomassMass, charMass, nitrogenFlow):
+  return currentTempCoefA*0 + dieselFlowCoefA*dieselFlow + biomassMassCoefA*biomassMass + charMassCoefA*0 + yInterceptA
 
-def yBcalc(currentTemp, dieselFlow, nitrogenFlow, biomassMass, charMass):
-  return currentTempCoefB*currentTemp + dieselFlowCoefB*dieselFlow + nitrogenFlowCoefB*nitrogenFlow + biomassMassCoefB*biomassMass + charMassCoefB*charMass + yInterceptB
+def yBcalc(currentTemp, dieselFlow, biomassMass, charMass, nitrogenFlow):
+  return currentTempCoefB*0 + dieselFlowCoefB*dieselFlow + biomassMassCoefB*biomassMass + charMassCoefB*0 + yInterceptA
 
 def calcUc(datasetA, datasetB):
-  CURRENT_TEMP = 1
-  DIESEL_FLOW = 2
-  NITROGEN_FLOW = 3
+  CURRENT_TEMP = 2
+  DIESEL_FLOW = 3
+  NITROGEN_FLOW = 1
   BIOMASS_MASS = 4
   CHAR_MASS = 5
   term1 = 0
@@ -31,16 +29,16 @@ def calcUc(datasetA, datasetB):
     yAB = yBcalc(
       datumA[CURRENT_TEMP],
       datumA[DIESEL_FLOW],
-      datumA[NITROGEN_FLOW],
       datumA[BIOMASS_MASS],
-      datumA[CHAR_MASS]
+      datumA[CHAR_MASS],
+      datumA[NITROGEN_FLOW]
     )
     yAA = yAcalc(
       datumA[CURRENT_TEMP],
       datumA[DIESEL_FLOW],
-      datumA[NITROGEN_FLOW],
       datumA[BIOMASS_MASS],
-      datumA[CHAR_MASS]
+      datumA[CHAR_MASS],
+      datumA[NITROGEN_FLOW]
     )
     term1 += ((yAB - yAA) ** 2)
 
@@ -48,16 +46,16 @@ def calcUc(datasetA, datasetB):
     yBA = yAcalc(
       datumB[CURRENT_TEMP],
       datumB[DIESEL_FLOW],
-      datumB[NITROGEN_FLOW],
       datumB[BIOMASS_MASS],
-      datumB[CHAR_MASS]
+      datumB[CHAR_MASS],
+      datumB[NITROGEN_FLOW]
     )
     yBB = yBcalc(
       datumB[CURRENT_TEMP],
       datumB[DIESEL_FLOW],
-      datumB[NITROGEN_FLOW],
       datumB[BIOMASS_MASS],
-      datumB[CHAR_MASS]
+      datumB[CHAR_MASS],
+      datumB[NITROGEN_FLOW]
     )
     term2 += ((yBA - yBB) ** 2)
 

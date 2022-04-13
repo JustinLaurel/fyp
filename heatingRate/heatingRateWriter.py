@@ -2,14 +2,17 @@ import numpy as numpy
 import xlsxwriter
 import pandas as pandas
 
-from ..services.helpers import addHeatingRateHeaders
+from helpers import addHeatingRateHeaders
 from uc.uc_main import calcUc
 
-dieselFlowrateLinspace = numpy.linspace(0.015, .055, 18)
-nitrogenFlowrateLinspace = numpy.linspace(0.6, 1.2, 12)
-biomassLinspace = numpy.linspace(0, 1.5, 12)
-charLinspace = numpy.linspace(0, 0.3, 12)
-currentTempLinspace = numpy.linspace(293, 1073, 32)
+mainDataLinspace = [18, 12, 12, 12, 32]
+reducedSizeDataLinspace = [14, 5, 5, 5, 20]
+
+dieselFlowrateLinspace = numpy.linspace(0.0020, .053, 18)
+nitrogenFlowrateLinspace = numpy.linspace(0.6, 1.2, 3)
+biomassLinspace = numpy.linspace(0, 1.5, 5)
+charLinspace = numpy.linspace(0, 0.3, 5)
+currentTempLinspace = numpy.linspace(293, 1073, 24)
 
 stateAndOutput = []
 HEATING_RATE = 0
@@ -31,7 +34,7 @@ def calcHeatingRate(
   )
 
 
-book = xlsxwriter.Workbook('Heating_Rate_M_Diesel.xlsx')
+book = xlsxwriter.Workbook('main.xlsx')
 sheet1 = book.add_worksheet("dataset A")
 sheet2 = book.add_worksheet("dataset B")
 sheet3 = book.add_worksheet("main")
@@ -101,12 +104,12 @@ for currentTemp in currentTempLinspace:
           print('rows processed: ' + str(row3) + 'heatingRate=' + str(heatingRate))
 
 book.close()
-print(
-  'uc = ' + str(calcUc(
-    datasetA,
-    datasetB
-  ))
-)
+# print(
+#   'uc = ' + str(calcUc(
+#     datasetA,
+#     datasetB
+#   ))
+# )
 
 
 

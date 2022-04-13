@@ -1,25 +1,21 @@
-yInterceptA = -0.819152157
-residenceTimeCoefA = 0.488247273
-heatingRateCoefA = 0
-nitrogenFlowCoefA = 0
-dieselFlowCoefA = 6.660691227
+yInterceptA = 4.96640187
+nitrogenFlowCoefA = -1.417362396
+dieselFlowCoefA = -38.92040488
 
-yInterceptB = -1.245498387
-residenceTimeCoefB = 0.567711382
-heatingRateCoefB = 0
-nitrogenFlowCoefB = 0
-dieselFlowCoefB = 13.91439793
+yInterceptB = 4.928211301
+nitrogenFlowCoefB = -1.377461054
+dieselFlowCoefB = -38.86809519
 
 def yAcalc(residenceTime, heatingRate, dieselFlow, nitrogenFlow):
-  return residenceTimeCoefA*residenceTime + dieselFlowCoefA*dieselFlow + yInterceptA
+  return nitrogenFlowCoefA*nitrogenFlow + dieselFlowCoefA*dieselFlow + yInterceptA
 
 def yBcalc(residenceTime, heatingRate, dieselFlow, nitrogenFlow):
-  return residenceTimeCoefB*residenceTime + dieselFlowCoefB*dieselFlow + yInterceptB
+  return nitrogenFlowCoefB*nitrogenFlow + dieselFlowCoefB*dieselFlow + yInterceptB
 
 def calcUc(datasetA, datasetB):
   RESIDENCE_TIME = 1
-  HEATING_RATE = 3
-  NITROGEN_FLOW = 4
+  HEATING_RATE = 4
+  NITROGEN_FLOW = 3
   DIESEL_FLOW = 2
   term1 = 0
   term2 = 0
