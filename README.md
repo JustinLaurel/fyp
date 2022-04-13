@@ -1,4 +1,4 @@
-**Code structure is a complete mess
+**Code structure is a complete mess**
 
 1. Go to heatingRate/heatingRateWriter.py and run the file
 2. An excel file named 'main.xlsx' will be created in heatingRate folder once the script finishes running. This is the input-output data
