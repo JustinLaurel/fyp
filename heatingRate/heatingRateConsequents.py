@@ -2,12 +2,12 @@ import numpy
 import pandas as pandas
 from helpers import *
 from model import generateFuzzyRules
+import xlsxwriter
 
 fuzzyRules = generateFuzzyRules()
 
 file = pandas.ExcelFile(r'C:\Users\Spring\Desktop\heatingRateModel\main_reduced_size.xlsx')
 data = pandas.read_excel(file, 'main').values
-print(data)
 
 DIESEL_FLOW = 2
 CURRENT_TEMP = 1
@@ -86,7 +86,6 @@ for datum in data:
     datum[HEATING_RATE]
   ])
 P = generateP(X, Y)
-print(generateP(X, Y))
 print('p array length=' + str(len(P)))
 
 index = 0
@@ -103,3 +102,19 @@ for param in intercepts:
 
 # consequentParams.append([intercept, currentTemp, dieselFlow])
 print(str(consequentParams))
+
+Y_INTERCEPT = 0
+DIESEL_FLOW = 1
+CURRENT_TEMP = 2
+book = xlsxwriter.Workbook('rules.xlsx')
+sheet1 = book.add_worksheet('main')
+sheet1.write(0, 0, 'y-intercept')
+sheet1.write(0, 1, 'Diesel flow rate (kg/s)')
+sheet1.write(0, 2, 'Current temperature (K)')
+row = 1
+for params in consequentParams:
+  sheet1.write(row, 0, params[Y_INTERCEPT])
+  sheet1.write(row, 1, params[DIESEL_FLOW])
+  sheet1.write(row, 2, params[CURRENT_TEMP])
+  row += 1
+book.close()

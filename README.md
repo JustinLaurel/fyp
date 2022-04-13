@@ -9,3 +9,4 @@ Code structure is a complete mess.
 7. consequentParams contain the y-intercept, diesel flow rate(kg/s) and current reactor temperature (K) parameters for every single rule in the fuzzy model, using the multiple least squares method
 8. 25 rules were used in the model
 9. Logic for generation of fuzzy rules is found in the same heatingRateConsequents.py file
+10. The premise parameters for the fuzzy sets of each rule corresponding to the consequentParams, from 1 to 25, is stored in variable 'fuzzySets' in heatingRateConsequents.py. fuzzySets value can only be viewed in debug mode because it is a class that cannot be printed like an array 
