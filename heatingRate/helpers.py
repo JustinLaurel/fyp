@@ -13,12 +13,11 @@ def splitData(data):
   return [datasetA, datasetB]
 
 def addHeatingRateHeaders(excelSheet):
-  excelSheet.write(0, 0, 'Heating Rate (K/s)')
-  excelSheet.write(0, 1, 'Current T (K)')
-  excelSheet.write(0, 2, 'Diesel Flowrate (kg/s)')
+  excelSheet.write(0, 0, 'Diesel Flowrate (kg/s)')
+  excelSheet.write(0, 1, 'Heating Rate (K/s)')
+  excelSheet.write(0, 2, 'Current T (K)')
   excelSheet.write(0, 3, 'Nitrogen Flowrate (kg/s)')
-  excelSheet.write(0, 4, 'Biomass mass (kg)')
-  excelSheet.write(0, 5, 'Char mass (kg)')
+  excelSheet.write(0, 4, 'Solid mass (kg)')
   return excelSheet
 
 class FuzzySet:
@@ -101,3 +100,26 @@ class FuzzyRule:
       if membership < minMembership: minMembership = membership
 
     return minMembership
+
+def formatPMatrix(P, fuzzyRules):
+  consequentParamsList = []
+
+  kSize = len(fuzzyRules[0].premiseFuzzySets)
+  consequentParamsCount = kSize + 1
+  betaCount = len(fuzzyRules)
+  higherBetaIndex = betaCount
+  lowerBetaIndex = 0
+  paramsListUnordered = []
+  for i in range(consequentParamsCount):
+    variableParam = P[lowerBetaIndex:higherBetaIndex]
+    paramsListUnordered.append(variableParam)
+    lowerBetaIndex += betaCount
+    higherBetaIndex += betaCount
+
+  for index in range(len(paramsListUnordered[0])):
+    paramsForOneRule = []
+    for paramsForOneVariable in paramsListUnordered:
+      paramsForOneRule.append(paramsForOneVariable[index][0])
+    consequentParamsList.append(paramsForOneRule)
+
+  return consequentParamsList
