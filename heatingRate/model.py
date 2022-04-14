@@ -1,8 +1,7 @@
+from tkinter import CURRENT
 import numpy
 import pandas as pandas
 from helpers import *
-
-
 
 dieselFlowFuzzySets = VariableFuzzySets([
   FuzzySet(None, 0.0015, 0.014875),
@@ -37,7 +36,34 @@ def generateFuzzyRules():
       fuzzyRules.append(FuzzyRule([tempSet, dieselSet]))
 
   return fuzzyRules
-  # for datum in data:
-  #   highestDiesel = dieselFlowFuzzySets.getHighestMembership(datum[DIESEL_FLOW])
-  #   highestTemp = currentTempFuzzySets.getHighestMembership(datum[CURRENT_TEMP])
-  #   degree = highestDiesel.membership * highestTemp.membership
+
+def evaluate(dataRow, fuzzyRules, consequentParamsList): # fuzzyRules and consequentParamsList must be the same length
+  DIESEL_FLOW = 2
+  CURRENT_TEMP = 1
+  INTERCEPT = 0
+
+  totalOutput = 0
+  totalFiringStrength = 0
+
+  index = 0
+  for rule in fuzzyRules:
+    consequentParams = consequentParamsList[index]
+    intercept = consequentParams[INTERCEPT]
+    currentTempCoef = consequentParams[2]
+    dieselFlowCoef = consequentParams[1]
+
+    currentTemp = dataRow[CURRENT_TEMP]
+    dieselFlow = dataRow[DIESEL_FLOW]
+
+    ruleFiringStrength = rule.calcFiringStrength([currentTemp, dieselFlow])
+    ruleOut = ruleFiringStrength * (
+      intercept + currentTempCoef*currentTemp + dieselFlowCoef *dieselFlow
+    )
+    totalOutput += ruleOut
+    totalFiringStrength += ruleFiringStrength
+    if (totalFiringStrength < 0): raise RuntimeError('firing strength is negative')
+    index += 1
+  index = 0
+
+  output = totalOutput / totalFiringStrength
+  return output

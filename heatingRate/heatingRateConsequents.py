@@ -1,5 +1,7 @@
+from tkinter import CURRENT
 import numpy
 import pandas as pandas
+from model import evaluate
 from helpers import *
 from model import generateFuzzyRules
 import xlsxwriter
@@ -89,32 +91,53 @@ P = generateP(X, Y)
 print('p array length=' + str(len(P)))
 
 index = 0
-consequentParams = []
+consequentParamsList = []
 intercepts = P[:25]
 dieselFlow = P[25:50]
 currentTemp = P[50:75]
 
 for param in intercepts:
-  consequentParams.append(
+  consequentParamsList.append(
     [intercepts[index][0], dieselFlow[index][0], currentTemp[index][0]]
   )
   index += 1
 
 # consequentParams.append([intercept, currentTemp, dieselFlow])
-print(str(consequentParams))
+print(str(consequentParamsList))
 
 Y_INTERCEPT = 0
-DIESEL_FLOW = 1
-CURRENT_TEMP = 2
-book = xlsxwriter.Workbook('rules.xlsx')
+DIESEL_FLOW = 2
+CURRENT_TEMP = 1
+# book = xlsxwriter.Workbook('rules.xlsx')
+# sheet1 = book.add_worksheet('main')
+# sheet1.write(0, 0, 'y-intercept')
+# sheet1.write(0, 1, 'Diesel flow rate (kg/s)')
+# sheet1.write(0, 2, 'Current temperature (K)')
+# row = 1
+# for params in consequentParamsList:
+#   sheet1.write(row, 0, params[Y_INTERCEPT])
+#   sheet1.write(row, 1, params[DIESEL_FLOW])
+#   sheet1.write(row, 2, params[CURRENT_TEMP])
+#   row += 1
+# book.close()
+
+# Evaluate output using input data with fuzzy model
+book = xlsxwriter.Workbook('fuzzyOutput.xlsx')
 sheet1 = book.add_worksheet('main')
-sheet1.write(0, 0, 'y-intercept')
-sheet1.write(0, 1, 'Diesel flow rate (kg/s)')
-sheet1.write(0, 2, 'Current temperature (K)')
-row = 1
-for params in consequentParams:
-  sheet1.write(row, 0, params[Y_INTERCEPT])
-  sheet1.write(row, 1, params[DIESEL_FLOW])
-  sheet1.write(row, 2, params[CURRENT_TEMP])
-  row += 1
+sheet1.write(0, 0, 'Heating Rate')
+sheet1.write(0, 1, 'Diesel Flow Rate')
+sheet1.write(0, 2, 'Current Temperature')
+sheet1.write(0, 3, 'Nitrogen Flow Rate')
+sheet1.write(0, 4, 'Biomass Mass')
+sheet1.write(0, 5, 'Char Mass')
+rowIndex = 1
+for row in data:
+  inferredOutput = evaluate(row, fuzzyRules, consequentParamsList)
+  sheet1.write(rowIndex, 0, inferredOutput)
+  sheet1.write(rowIndex, 1, row[CURRENT_TEMP])
+  sheet1.write(rowIndex, 2, row[DIESEL_FLOW])
+  sheet1.write(rowIndex, 3, row[3])
+  sheet1.write(rowIndex, 4, row[4])
+  sheet1.write(rowIndex, 5, row[5])
+  rowIndex += 1
 book.close()
