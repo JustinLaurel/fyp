@@ -11,11 +11,11 @@ def annot_max(x, y, ax=None):
   if not ax:
     ax = plot.gca()
   bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
-  ar0props=dict(ar0style="->",connectionstyle="angle,angleA=0,angleB=60")
+  arrowprops=dict(arrowstyle="->",connectionstyle="angle,angleA=0,angleB=60")
   kw = dict(
     xycoords='data',
     textcoords="axes fraction",
-    ar0props=ar0props,
+    arrowprops=arrowprops,
     bbox=bbox_props,
     ha="right",
     va="top"
@@ -32,6 +32,7 @@ def trimArray(array, desiredLength):
 
 def getAverage(valuesArray):
   total = 0
+  if len(valuesArray) == 0: return 0
   for value in valuesArray:
     total += value
 
@@ -67,3 +68,6 @@ def splitData(data):
     alternatingIndex += 1
 
   return [datasetA, datasetB]
+
+
+

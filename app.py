@@ -135,117 +135,117 @@ m7 = x[:, 6]
 m8 = x[:, 7]
 m9 = x[:, 8]
 
-heatingRateLinspace = numpy.linspace(150, 250, 50)
-nitrogenFlowrateLinspace = numpy.linspace(0.6, 1.2, 50)
+# heatingRateLinspace = numpy.linspace(150, 250, 50)
+# nitrogenFlowrateLinspace = numpy.linspace(0.6, 1.2, 50)
 
-#Excel initialization
-book = xlsxwriter.Workbook('Input_Output.xlsx')
-sheet1 = book.add_worksheet("dataset A")
-sheet2 = book.add_worksheet("dataset B")
-sheet3 = book.add_worksheet("main")
-addTarHeaders(sheet1)
-addTarHeaders(sheet2)
-addTarHeaders(sheet3)
-row1 = 1
-row2 = 1
-row3 = 1
+# #Excel initialization
+# book = xlsxwriter.Workbook('Input_Output.xlsx')
+# sheet1 = book.add_worksheet("dataset A")
+# sheet2 = book.add_worksheet("dataset B")
+# sheet3 = book.add_worksheet("main")
+# addTarHeaders(sheet1)
+# addTarHeaders(sheet2)
+# addTarHeaders(sheet3)
+# row1 = 1
+# row2 = 1
+# row3 = 1
 
-alternatingIndex = 2
-FINAL_TAR_YIELD = 0
-RESIDENCE_TIME = 1
-HEATING_RATE = 2
-M_NITROGEN = 3
-M_DIESEL = 4
-datasetA = []
-datasetB = []
-for heatingRate in heatingRateLinspace:
-  for nitrogenFlowrate in nitrogenFlowrateLinspace:
-    odeint(odes, x0, t, (heatingRate, initialTemp, nitrogenFlowrate))
-    outputValuesList.append(stateAndOutput.copy())
-    additionalDataList.append(maxYieldWithResidenceTime.copy())
+# alternatingIndex = 2
+# FINAL_TAR_YIELD = 0
+# RESIDENCE_TIME = 1
+# HEATING_RATE = 2
+# M_NITROGEN = 3
+# M_DIESEL = 4
+# datasetA = []
+# datasetB = []
+# for heatingRate in heatingRateLinspace:
+#   for nitrogenFlowrate in nitrogenFlowrateLinspace:
+#     odeint(odes, x0, t, (heatingRate, initialTemp, nitrogenFlowrate))
+#     outputValuesList.append(stateAndOutput.copy())
+#     additionalDataList.append(maxYieldWithResidenceTime.copy())
 
-    # Correction factor to discourage heating rates from exceeding 200degC
-    # Because damaging effects of high heat fluxes on refractory & equipment are not accounted for
-    finalTarYield = stateAndOutput[FINAL_TAR_YIELD]
-    if heatingRate > 200:
-      finalTarYield = stateAndOutput[FINAL_TAR_YIELD] * ((100-(heatingRate - 200)) / 100)
+#     # Correction factor to discourage heating rates from exceeding 200degC
+#     # Because damaging effects of high heat fluxes on refractory & equipment are not accounted for
+#     finalTarYield = stateAndOutput[FINAL_TAR_YIELD]
+#     if heatingRate > 200:
+#       finalTarYield = stateAndOutput[FINAL_TAR_YIELD] * ((100-(heatingRate - 200)) / 100)
 
-    #Write to excel
-    if len(stateAndOutput) != 0:
-      if (alternatingIndex % 2 == 0):
-        sheet1.write(row1, 0, finalTarYield)
-        sheet1.write(row1, 1, stateAndOutput[RESIDENCE_TIME])
-        sheet1.write(row1, 2, stateAndOutput[HEATING_RATE])
-        sheet1.write(row1, 3, stateAndOutput[M_NITROGEN])
-        sheet1.write(row1, 4, stateAndOutput[M_DIESEL])
+#     #Write to excel
+#     if len(stateAndOutput) != 0:
+#       if (alternatingIndex % 2 == 0):
+#         sheet1.write(row1, 0, finalTarYield)
+#         sheet1.write(row1, 1, stateAndOutput[RESIDENCE_TIME])
+#         sheet1.write(row1, 2, stateAndOutput[HEATING_RATE])
+#         sheet1.write(row1, 3, stateAndOutput[M_NITROGEN])
+#         sheet1.write(row1, 4, stateAndOutput[M_DIESEL])
 
-        datasetA.append([
-          finalTarYield,
-          stateAndOutput[HEATING_RATE],
-          stateAndOutput[M_NITROGEN]
-        ])
+#         datasetA.append([
+#           finalTarYield,
+#           stateAndOutput[HEATING_RATE],
+#           stateAndOutput[M_NITROGEN]
+#         ])
 
-        row1 += 1
-        alternatingIndex +=1
-      else:
-        sheet2.write(row2, 0, finalTarYield)
-        sheet2.write(row2, 1, stateAndOutput[RESIDENCE_TIME])
-        sheet2.write(row2, 2, stateAndOutput[HEATING_RATE])
-        sheet2.write(row2, 3, stateAndOutput[M_NITROGEN])
-        sheet2.write(row2, 4, stateAndOutput[M_DIESEL])
+#         row1 += 1
+#         alternatingIndex +=1
+#       else:
+#         sheet2.write(row2, 0, finalTarYield)
+#         sheet2.write(row2, 1, stateAndOutput[RESIDENCE_TIME])
+#         sheet2.write(row2, 2, stateAndOutput[HEATING_RATE])
+#         sheet2.write(row2, 3, stateAndOutput[M_NITROGEN])
+#         sheet2.write(row2, 4, stateAndOutput[M_DIESEL])
 
-        datasetB.append([
-          finalTarYield,
-          stateAndOutput[HEATING_RATE],
-          stateAndOutput[M_NITROGEN]
-        ])
+#         datasetB.append([
+#           finalTarYield,
+#           stateAndOutput[HEATING_RATE],
+#           stateAndOutput[M_NITROGEN]
+#         ])
 
-        row2 += 1
-        alternatingIndex += 1
+#         row2 += 1
+#         alternatingIndex += 1
 
-      sheet3.write(row3, 0, finalTarYield)
-      sheet3.write(row3, 1, stateAndOutput[RESIDENCE_TIME])
-      sheet3.write(row3, 2, stateAndOutput[HEATING_RATE])
-      sheet3.write(row3, 3, stateAndOutput[M_NITROGEN])
-      sheet3.write(row3, 4, stateAndOutput[M_DIESEL])
-      row3 += 1
+#       sheet3.write(row3, 0, finalTarYield)
+#       sheet3.write(row3, 1, stateAndOutput[RESIDENCE_TIME])
+#       sheet3.write(row3, 2, stateAndOutput[HEATING_RATE])
+#       sheet3.write(row3, 3, stateAndOutput[M_NITROGEN])
+#       sheet3.write(row3, 4, stateAndOutput[M_DIESEL])
+#       row3 += 1
 
-    #Reset values
-    stateAndOutput = []
-    maxYieldWithResidenceTime = [0, 0]
-    nitrogenFlowrates = []
-    dieselFlowrates = []
-    print('rows processed: ' + str(row3))
+#     #Reset values
+#     stateAndOutput = []
+#     maxYieldWithResidenceTime = [0, 0]
+#     nitrogenFlowrates = []
+#     dieselFlowrates = []
+#     print('rows processed: ' + str(row3))
 
-book.close()
-print(
-  'uc = ' + str(calcUc(
-    datasetA,
-    datasetB
-  ))
-)
+# book.close()
+# print(
+#   'uc = ' + str(calcUc(
+#     datasetA,
+#     datasetB
+#   ))
+# )
 
 
 
-# ax = plot.subplots()
+ax = plot.subplots()
 
 # trimmedDiesel = trimArray(dieselValue, len(t))
 
-# # plot the results
-# plot.xlabel('time (s)')
-# plot.ylabel('mass (kg)')
-# plot.title('Graph of composition change for biomass')
-# plot.plot(t, m1, label="cellulose")
-# plot.plot(t, m2, label="hemicellulose")
-# plot.plot(t, m3, label="lignin")
-# plot.plot(t, m7, label="tar")
-# plot.plot(t, m9, label="char")
+# plot the results
+plot.xlabel('time (s)')
+plot.ylabel('mass (kg)')
+plot.title('Graph of composition change for biomass')
+plot.plot(t, m1, label="cellulose")
+plot.plot(t, m2, label="hemicellulose")
+plot.plot(t, m3, label="lignin")
+plot.plot(t, m7, label="tar")
+plot.plot(t, m9, label="char")
 # plot.plot(t, trimmedDiesel, label="Diesel flowrate" )
-# plot.legend()
+plot.legend()
 
-# # annot_max(t, m7)
-# # annot_max(t, trimmedDiesel)
-# # annot_max(t, m9)
+annot_max(t, m7)
+# annot_max(t, trimmedDiesel)
+# annot_max(t, m9)
 
-# plot.ylim(0, 1.25)
-# plot.show()
+plot.ylim(0, 1.25)
+plot.show()

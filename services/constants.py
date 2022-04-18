@@ -39,3 +39,6 @@ yl = 0.75
 pb = 380      #biomass
 pc = 350      #char
 pg = 1.2506   #gas
+
+reactorWallMass = 11988.75
+heatCapacitySteel = 468
