@@ -1,6 +1,7 @@
 print('hello')
 from random import randint
 from scipy.integrate import odeint
+from scipy.integrate import quad
 import numpy as numpy
 import matplotlib.pyplot as plot
 from math import exp
@@ -12,6 +13,7 @@ from ucMain import calcUc
 
 reactionIsOver = False
 finalYield = None
+temperatureHistory = []
 def odes(
   x, 
   t,
@@ -22,6 +24,11 @@ def odes(
 ):
   global reactionIsOver
   global finalYield
+  global temperatureHistory
+
+  sensorDistanceFromTungsten = 1.12
+  sensorTimeDelay = sensorDistanceFromTungsten / nitrogenFlow
+
   # assign each ODE to a vector element
   m1 = x[0]
   m2 = x[1]
@@ -33,9 +40,32 @@ def odes(
   m8 = x[7]
   m9 = x[8]
   innerTemp = x[9]
+  sensorTemp = x[10]
 
-  # woodMass = cellulose, hemicellulose, lignin with water & air gaps
-  # solidMass = active material + char
+  # sensorTemp = initialTemp
+  # sensorDistanceFromTungsten = 1.12
+  # sensorTimeDelay = sensorDistanceFromTungsten / nitrogenFlow
+
+  # for data in reversed(temperatureHistory):
+  #   if data["time"] < (t - sensorTimeDelay): 
+  #     sensorTemp = data["innerTemp"]
+  #     break
+
+  innerTempWithTimeDelay = initialTemp
+  for data in reversed(temperatureHistory):
+    if data["time"] < (t-sensorTimeDelay):
+      innerTempWithTimeDelay = data["innerTemp"]
+      break
+
+
+  temperatureHistory.append({
+    "innerTemp": innerTemp,
+    "time": t
+  })
+
+  print('sensorTemp=' + str(sensorTemp) + ', innerTemp=' + str(innerTemp) + ', t=' + str(t))
+
+
   solidMass = m1 + m2 + m3 + m4 + m5 + m6 + m9
 
   k1c = a1 * exp(K1 / innerTemp)
@@ -50,7 +80,7 @@ def odes(
   k4 = a10 * exp(K10 / innerTemp)
 
   # tungstenTemp = pidEvaluateTungsten(innerTemp)
-  tungstenTemp = 1000
+  tungstenTemp = 3000
 
   # define each ODE
   dm1_dt = -k1c * m1
@@ -71,6 +101,9 @@ def odes(
     ((4.7156*innerTemp**2 + 628.711*innerTemp)*(tungstenTemp - innerTemp) + ((0.00006*innerTemp + 0.08)**0.43)*(-823500*innerTemp + 823500*293)) / 
     (((0.00006*innerTemp+0.08)**0.43) * (2351916 + 1420*solidMass*innerTemp))
   )
+  dTsensor_dt = (
+    (-sensorTemp + innerTempWithTimeDelay) / (0.0004*innerTemp**0.8725)
+  )
 
   if (not reactionIsOver) & (t > reactorHeight/nitrogenFlow):
     finalYield = m7
@@ -87,11 +120,12 @@ def odes(
     dm8_dt, # Gas
     dm9_dt, # Char
     dT_dt,  # innerTemp, Reactor temperature
+    dTsensor_dt # sensorTemp, Thermocouple temperature
   ]
 
 # constants
 biomassMass = 70
-timeRangeSeconds = 30
+timeRangeSeconds = 10
 heatingRate = 200
 mNitrogen = 0.8
 
@@ -107,6 +141,7 @@ x0 = [  #Composition @ t=0, kg
   0,  #Gas
   0,  #Char
   293, #Initial inner temperature
+  293, #Initial sensor temperature
 ]
 
 # time vector (time window)
@@ -123,6 +158,7 @@ m7 = x[:, 6]
 m8 = x[:, 7]
 m9 = x[:, 8]
 innerTemp = x[:, 9]
+sensorTemp = x[:, 10]
 
 #Excel initialization
 book = xlsxwriter.Workbook('Input_Output.xlsx')
@@ -149,6 +185,7 @@ plot.xlabel('time (s)')
 plot.ylabel('temperature (K)')
 plot.title('Graph of inner and sensor temperature vs time')
 plot.plot(t, innerTemp, label="Inner temperature")
+plot.plot(t, sensorTemp, label="Sensor temp")
 plot.legend()
 plot.ylim(0, 1500)
 
