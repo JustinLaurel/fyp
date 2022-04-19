@@ -74,3 +74,11 @@ def sortByTime(list):
     return element['time']
 
   return sorted(list, key=takeTime)
+
+def getLastTimeChangeData(historyList, current_t):
+  sorted = sortByTime(historyList)
+  for history in reversed(sorted):
+    if history['time'] < current_t:
+      return history
+
+  return None

@@ -22,7 +22,7 @@ class Sensor():
         innerTempWithTimeDelay = data["innerTemp"]
         break
 
-    dTsensor_dt = (-self.sensorTemp + innerTempWithTimeDelay) / (0.7421*math.exp(0.0008*innerTemp))
+    dTsensor_dt = (-self.sensorTemp + innerTempWithTimeDelay) / (0.0001*innerTemp + 0.1094)
     dTsensor_dtNoDelay = (-self.sensorTemp + innerTemp) / 5
 
     self.sensorTemp
@@ -35,13 +35,10 @@ class Sensor():
     change = 0
     if len(innerTempHistory) > 1:
       if t > innerTempHistory[-1]['time']:
-        if (t > 126) & (innerTemp > 2900): return self.sensorTemp
         change = dTsensor_dt * (t-innerTempHistory[-1]['time'])
-        print('sensorTemp change=' + str(change) + ', time=' + str(t))
+        if (abs(change) > 80): return innerTempHistory[-1]['innerTemp']
         self.sensorTemp += change
         self.sensorLogs.append({"sensor": self.sensorTemp, "inner": innerTemp, "tungsten": tungstenTemp, "time": t})
-
-
 
     return self.sensorTemp
 

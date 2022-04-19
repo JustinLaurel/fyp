@@ -1,15 +1,10 @@
-print('hello')
-from random import randint
 from scipy.integrate import odeint
-from scipy.integrate import quad
 import numpy as numpy
 import matplotlib.pyplot as plot
 from math import exp
-# from heatingRate.dieselFuzzySets import modelEvaluate
 from services.helpers import *
 from services.constants import *
 import xlsxwriter
-from ucMain import calcUc
 from sensor import Sensor
 
 reactionIsOver = False
@@ -19,7 +14,6 @@ sensor = Sensor(293, 2.8)
 def odes(
   x, 
   t,
-  desiredHeatingRate = 200, # K/s
   initialTemp = 293, # K
   nitrogenFlow = 2.8,# m/s
   reactorHeight = 8
@@ -28,15 +22,7 @@ def odes(
   global finalYield
   global temperatureHistory
 
-  # tungstenTemp = pidEvaluateTungsten(innerTemp)
-  tungstenTemp = 293
-  if (1 < t < 25): tungstenTemp = 2000
-  if (t >= 25): tungstenTemp = 300
-  if (40 <= t < 60): tungstenTemp = 1000
-  if (80 <= t < 120): tungstenTemp = 3000
-  # if (0.5 < t < 10): tungstenTemp = 1000
-
-  # if (15 < t < 20): tungstenTemp = 2000
+  tungstenTemp = 2600
 
   # assign each ODE to a vector element
   m1 = x[0]
@@ -108,11 +94,11 @@ def odes(
   ]
 
 # constants
-biomassMass = 70
-heatingRate = 200
-mNitrogen = 0.8
+biomassMass = 50
+initialTemp = 293
+nitrogenFlowrate = 2.8
 
-timeRangeSeconds = 140
+timeRangeSeconds = 6
 timeSteps = 1000
 
 
@@ -132,7 +118,7 @@ x0 = [  #Composition @ t=0, kg
 
 # time vector (time window)
 t = numpy.linspace(0, timeRangeSeconds, timeSteps)
-x = odeint(odes, x0, t, (heatingRate, 293))
+x = odeint(odes, x0, t, (initialTemp, nitrogenFlowrate))
 
 m1 = x[:, 0]
 m2 = x[:, 1]
@@ -145,6 +131,7 @@ m8 = x[:, 7]
 m9 = x[:, 8]
 innerTemp = x[:, 9]
 
+# Retrieve data from Sensor
 logs = sensor.getLogs()
 innerTempLogs = []
 sensorTempLogs = []
@@ -156,18 +143,36 @@ for log in logs:
   tungstenTempLogs.append(log["tungsten"])
   timeLogs.append(log["time"])
 
+
+#Write Sensor data to Excel
+book = xlsxwriter.Workbook('pyrolyzer.xlsx')
+sheet1 = book.add_worksheet('main')
+sheet1.write(0, 0, 'Tungsten temp')
+sheet1.write(0, 1, 'Sensor temp')
+sheet1.write(0, 2, 'Inner temp')
+sheet1.write(0, 3, 'Time')
+
+rowIndex = 1
+for log in innerTempLogs:
+  sheet1.write(rowIndex, 0, tungstenTempLogs[rowIndex - 1])
+  sheet1.write(rowIndex, 1, sensorTempLogs[rowIndex - 1])
+  sheet1.write(rowIndex, 2, innerTempLogs[rowIndex - 1])
+  sheet1.write(rowIndex, 3, timeLogs[rowIndex - 1])
+  rowIndex += 1
+book.close()
+
+
 # Display the results
 print('Final tar yield: ' + str(finalYield) + ' kg')
 plot.subplot(2, 1, 1)
 plot.xlabel('time (s)')
 plot.ylabel('temperature (K)')
-plot.title('Graph of inner and sensor temperature vs time')
-plot.plot(timeLogs, innerTempLogs, label="Inner temperature")
+plot.title('Graph of actual temp, sensor temp & tungsten temp vs time')
+plot.plot(timeLogs, innerTempLogs, label="Actual temperature")
 plot.plot(timeLogs, sensorTempLogs, label="Sensor temperature")
 plot.plot(timeLogs, tungstenTempLogs, label="Tungsten temperature")
 plot.legend()
 plot.ylim(0, 3400)
-
 
 plot.subplot(2, 1, 2)
 plot.xlabel('time (s)')
@@ -176,11 +181,15 @@ plot.title('Graph of composition change for biomass')
 plot.plot(t, m1, label="cellulose")
 plot.plot(t, m2, label="hemicellulose")
 plot.plot(t, m3, label="lignin")
+# plot.plot(t, m4, label="active cellulose")
+# plot.plot(t, m5, label="active hemicellulose")
+# plot.plot(t, m6, label="active lignin")
 plot.plot(t, m7, label="tar")
+plot.plot(t, m8, label="non-condensable gases")
 plot.plot(t, m9, label="char")
 annot_max(t, m7)
 plot.legend()
-plot.ylim(0, 70)
-
+plot.ylim(0, 55)
 plot.show()
+
 print('hello')
