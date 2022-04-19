@@ -69,5 +69,8 @@ def splitData(data):
 
   return [datasetA, datasetB]
 
+def sortByTime(list):
+  def takeTime(element):
+    return element['time']
 
-
+  return sorted(list, key=takeTime)

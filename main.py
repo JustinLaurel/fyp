@@ -10,10 +10,12 @@ from services.helpers import *
 from services.constants import *
 import xlsxwriter
 from ucMain import calcUc
+from sensor import Sensor
 
 reactionIsOver = False
 finalYield = None
 temperatureHistory = []
+sensor = Sensor(293, 2.8)
 def odes(
   x, 
   t,
@@ -26,8 +28,15 @@ def odes(
   global finalYield
   global temperatureHistory
 
-  sensorDistanceFromTungsten = 1.12
-  sensorTimeDelay = sensorDistanceFromTungsten / nitrogenFlow
+  # tungstenTemp = pidEvaluateTungsten(innerTemp)
+  tungstenTemp = 293
+  if (1 < t < 25): tungstenTemp = 2000
+  if (t >= 25): tungstenTemp = 300
+  if (40 <= t < 60): tungstenTemp = 1000
+  if (80 <= t < 120): tungstenTemp = 3000
+  # if (0.5 < t < 10): tungstenTemp = 1000
+
+  # if (15 < t < 20): tungstenTemp = 2000
 
   # assign each ODE to a vector element
   m1 = x[0]
@@ -40,33 +49,14 @@ def odes(
   m8 = x[7]
   m9 = x[8]
   innerTemp = x[9]
-  sensorTemp = x[10]
+  solidMass = m1 + m2 + m3 + m4 + m5 + m6 + m9
 
-  # sensorTemp = initialTemp
-  # sensorDistanceFromTungsten = 1.12
-  # sensorTimeDelay = sensorDistanceFromTungsten / nitrogenFlow
-
-  # for data in reversed(temperatureHistory):
-  #   if data["time"] < (t - sensorTimeDelay): 
-  #     sensorTemp = data["innerTemp"]
-  #     break
-
-  innerTempWithTimeDelay = initialTemp
-  for data in reversed(temperatureHistory):
-    if data["time"] < (t-sensorTimeDelay):
-      innerTempWithTimeDelay = data["innerTemp"]
-      break
-
-
+  sensor.update(innerTemp, temperatureHistory, tungstenTemp, t)
   temperatureHistory.append({
     "innerTemp": innerTemp,
     "time": t
   })
-
-  print('sensorTemp=' + str(sensorTemp) + ', innerTemp=' + str(innerTemp) + ', t=' + str(t))
-
-
-  solidMass = m1 + m2 + m3 + m4 + m5 + m6 + m9
+  # print('sensorTemp=' + str(sensor.getReading()) + ', innerTemp=' + str(innerTemp) + ', t=' + str(t))
 
   k1c = a1 * exp(K1 / innerTemp)
   k2c = a2 * exp(K2 / innerTemp)
@@ -79,8 +69,6 @@ def odes(
   k3l = a9 * exp(K9 / innerTemp)
   k4 = a10 * exp(K10 / innerTemp)
 
-  # tungstenTemp = pidEvaluateTungsten(innerTemp)
-  tungstenTemp = 3000
 
   # define each ODE
   dm1_dt = -k1c * m1
@@ -101,9 +89,6 @@ def odes(
     ((4.7156*innerTemp**2 + 628.711*innerTemp)*(tungstenTemp - innerTemp) + ((0.00006*innerTemp + 0.08)**0.43)*(-823500*innerTemp + 823500*293)) / 
     (((0.00006*innerTemp+0.08)**0.43) * (2351916 + 1420*solidMass*innerTemp))
   )
-  dTsensor_dt = (
-    (-sensorTemp + innerTempWithTimeDelay) / (0.0004*innerTemp**0.8725)
-  )
 
   if (not reactionIsOver) & (t > reactorHeight/nitrogenFlow):
     finalYield = m7
@@ -120,19 +105,21 @@ def odes(
     dm8_dt, # Gas
     dm9_dt, # Char
     dT_dt,  # innerTemp, Reactor temperature
-    dTsensor_dt # sensorTemp, Thermocouple temperature
   ]
 
 # constants
 biomassMass = 70
-timeRangeSeconds = 10
 heatingRate = 200
 mNitrogen = 0.8
+
+timeRangeSeconds = 140
+timeSteps = 1000
+
 
 # initial conditions
 x0 = [  #Composition @ t=0, kg
   biomassMass * 0.42, #Cellulose
-  biomassMass * 0.32, #Hemicellulose
+  biomassMass * 0.32, #Hemicellulose 
   biomassMass * 0.26, #Lignin
   0,  #Active cellulose
   0,  #Active hemicellulose
@@ -141,11 +128,10 @@ x0 = [  #Composition @ t=0, kg
   0,  #Gas
   0,  #Char
   293, #Initial inner temperature
-  293, #Initial sensor temperature
 ]
 
 # time vector (time window)
-t = numpy.linspace(0, timeRangeSeconds, 100)
+t = numpy.linspace(0, timeRangeSeconds, timeSteps)
 x = odeint(odes, x0, t, (heatingRate, 293))
 
 m1 = x[:, 0]
@@ -158,25 +144,17 @@ m7 = x[:, 6]
 m8 = x[:, 7]
 m9 = x[:, 8]
 innerTemp = x[:, 9]
-sensorTemp = x[:, 10]
 
-#Excel initialization
-book = xlsxwriter.Workbook('Input_Output.xlsx')
-sheet1 = book.add_worksheet("dataset A")
-sheet2 = book.add_worksheet("dataset B")
-sheet3 = book.add_worksheet("main")
-addTarHeaders(sheet1)
-addTarHeaders(sheet2)
-addTarHeaders(sheet3)
-row1 = 1
-row2 = 1
-row3 = 1
-
-alternatingIndex = 2
-datasetA = []
-datasetB = []
-
-ax = plot.subplots()
+logs = sensor.getLogs()
+innerTempLogs = []
+sensorTempLogs = []
+tungstenTempLogs = []
+timeLogs = []
+for log in logs:
+  innerTempLogs.append(log["inner"])
+  sensorTempLogs.append(log["sensor"])
+  tungstenTempLogs.append(log["tungsten"])
+  timeLogs.append(log["time"])
 
 # Display the results
 print('Final tar yield: ' + str(finalYield) + ' kg')
@@ -184,10 +162,11 @@ plot.subplot(2, 1, 1)
 plot.xlabel('time (s)')
 plot.ylabel('temperature (K)')
 plot.title('Graph of inner and sensor temperature vs time')
-plot.plot(t, innerTemp, label="Inner temperature")
-plot.plot(t, sensorTemp, label="Sensor temp")
+plot.plot(timeLogs, innerTempLogs, label="Inner temperature")
+plot.plot(timeLogs, sensorTempLogs, label="Sensor temperature")
+plot.plot(timeLogs, tungstenTempLogs, label="Tungsten temperature")
 plot.legend()
-plot.ylim(0, 1500)
+plot.ylim(0, 3400)
 
 
 plot.subplot(2, 1, 2)
