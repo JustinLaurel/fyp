@@ -5,6 +5,7 @@ from math import exp
 from services.helpers import *
 from services.constants import *
 from sensor import Sensor
+from pid import PidController
 
 reactionIsOver = False
 tarYield = None
@@ -14,12 +15,18 @@ def odes(
   x, 
   t,
   tungstenTemp,
+  initialTemp = 293
 ):
   global reactionIsOver
   global tarYield
   global temperatureHistory
 
-  # assign each ODE to a vector element
+  if tungstenTemp == 0: tungstenTemp = initialTemp
+  for i in range(len(x)):
+    if (x[i] < 0) & (i != 9): x[i] = 0
+    if (i == 9) & (x[i] > tungstenTemp): 
+      x[i] = tungstenTemp
+
   m1 = x[0]
   m2 = x[1]
   m3 = x[2]
@@ -64,6 +71,8 @@ def odes(
     ((4.7156*innerTemp**2 + 628.711*innerTemp)*(tungstenTemp - innerTemp) + ((0.00006*innerTemp + 0.08)**0.43)*(-823500*innerTemp + 823500*293)) / 
     (((0.00006*innerTemp+0.08)**0.43) * (2351916 + 1420*solidMass*innerTemp))
   )
+  # if (innerTemp >= tungstenTemp): 
+  #   dT_dt = 0
 
   return [
     dm1_dt, # Cellulose
@@ -83,7 +92,7 @@ biomassMass = 50
 initialTemp = 293
 nitrogenFlowrate = 2.8
 
-timeRangeSeconds = 6
+timeRangeSeconds = 4
 timeSteps = 1000
 
 
@@ -105,7 +114,7 @@ initialStates = [  #Composition @ t=0, kg
 timeSteps = numpy.linspace(0, timeRangeSeconds, timeSteps)
 
 currentStates = initialStates
-tungstenTemp = 2210
+tungstenTemp = 3000
 tungstenTemps = numpy.ones(len(timeSteps)) * tungstenTemp
 
 reactorHeight = 8
@@ -122,13 +131,58 @@ m8 = numpy.ones(len(timeSteps)) * initialStates[7]
 m9 = numpy.ones(len(timeSteps)) * initialStates[8]
 actualTemp = numpy.ones(len(timeSteps)) * initialStates[9]
 
+sensor = Sensor(293, 2.8)
+reactionIsOver = False
+tarYield = None
+
+tungstenTemps = numpy.zeros(len(timeSteps))
+feedbacks = numpy.zeros(len(timeSteps))
+errors = numpy.zeros(len(timeSteps))
+integralErrors = numpy.zeros(len(timeSteps))
+derivativeFeedbacks = numpy.zeros(len(timeSteps))
+setpoints = numpy.ones(len(timeSteps))
+
+tungstenHeatingRate = 200
+for index in range(len(setpoints)):
+  setpoints[index] = timeSteps[index] * tungstenHeatingRate + 293
+
+maxTungstenTemp = 3200
+minTungstenTemp = 293
+
+feedbacks[0] = 293
+
+controller = PidController()
+controller.setParams(3, 16, 3)
 for index in range(len(timeSteps) - 1):
+  deltaTime = timeSteps[index+1] - timeSteps[index]
+  errors[index] = setpoints[index] - feedbacks[index]
+  error = errors[index]
+  if index >= 1:
+    derivativeFeedbacks[index] = (feedbacks[index] - feedbacks[index-1]) / deltaTime
+    integralErrors[index] = integralErrors[index-1] + errors[index] * deltaTime
+
+  evaluated = controller.evaluate(
+    tungstenTemps[0],
+    errors[index],
+    integralErrors[index],
+    derivativeFeedbacks[index]
+  )
+  tungstenTemps[index] = evaluated
+
+  if tungstenTemps[index] > maxTungstenTemp:
+    tungstenTemps[index] = maxTungstenTemp
+    integralErrors[index] = integralErrors[index] - errors[index] * deltaTime
+  elif tungstenTemps[index] < minTungstenTemp:
+    tungstenTemps[index] = minTungstenTemp
+    integralErrors[index] = integralErrors[index] - errors[index] * deltaTime
+
   currentTimeStep = [
     timeSteps[index],
     timeSteps[index + 1]
   ]
   output = odeint(odes, currentStates, currentTimeStep, args=(
-    tungstenTemps[index + 1],
+    tungstenTemps[index],
+    293
   ))[-1]
 
   m1[index+1] = output[0]
@@ -156,7 +210,7 @@ for index in range(len(timeSteps) - 1):
   sensor.update(
     actualTemp[index+1],
     temperatureHistory,
-    tungstenTemps[index + 1],
+    tungstenTemps[index],
     timeSteps[index]
   )
   temperatureHistory.append({
@@ -167,6 +221,7 @@ for index in range(len(timeSteps) - 1):
   if (reactionIsOver is False) & (currentTimeStep[0] > reactorHeight/nitrogenFlow):
     tarYield = {"yield": m7[index], "time": currentTimeStep[0]}
     reactionIsOver = True
+    # break
 
 # Retrieve data from Sensor
 logs = sensor.getLogs()
@@ -180,6 +235,9 @@ for log in logs:
   tungstenTempLogs.append(log["tungsten"])
   timeLogs.append(log["time"])
 
+controllerLogs = controller.getLogs()
+controllerParams = controller.getParams()
+
 
 # Display the results
 print('Final tar yield: ' + str(tarYield['yield']) + ' kg, at t=' + str(tarYield['time']))
@@ -191,7 +249,7 @@ plot.plot(timeLogs, innerTempLogs, label="Actual temperature")
 plot.plot(timeLogs, sensorTempLogs, label="Sensor temperature")
 plot.plot(timeLogs, tungstenTempLogs, label="Tungsten temperature")
 plot.legend()
-plot.ylim(0, 3200)
+plot.ylim(0, 3500)
 
 plot.subplot(2, 1, 2)
 plot.xlabel('time (s)')
@@ -207,7 +265,7 @@ plot.plot(timeSteps, m7, label="tar")
 plot.plot(timeSteps, m8, label="non-condensable gases")
 plot.plot(timeSteps, m9, label="char")
 annot_max(timeSteps, m7)
-plot.legend()
+# plot.legend()
 plot.ylim(0, 52)
 plot.show()
 

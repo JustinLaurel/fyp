@@ -1,5 +1,4 @@
 import random
-import numpy as numpy
 import xlsxwriter
 import pandas as pandas
 
