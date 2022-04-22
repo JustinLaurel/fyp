@@ -1,11 +1,21 @@
+import os
+import pandas
 from scipy.integrate import odeint
 import numpy as numpy
 import matplotlib.pyplot as plot
 from math import exp
+from fuzzy.main import identifyFuzzyController
 from services.helpers import *
 from services.constants import *
 from sensor import Sensor
-from pid import PidController
+
+
+# Modify file path to location of your data's excel file
+dirname = os.path.dirname(__file__)
+filename = os.path.join(dirname, '.\model_data.xlsx')
+file = pandas.ExcelFile(filename)
+data = pandas.read_excel(file, 'main').values
+
 
 reactionIsOver = False
 tarYield = None
@@ -88,11 +98,11 @@ def odes(
   ]
 
 # constants
-biomassMass = 50
+biomassMass = 30
 initialTemp = 293
 nitrogenFlowrate = 2.8
 
-timeRangeSeconds = 4
+timeRangeSeconds = 5
 timeSteps = 1000
 
 
@@ -114,8 +124,6 @@ initialStates = [  #Composition @ t=0, kg
 timeSteps = numpy.linspace(0, timeRangeSeconds, timeSteps)
 
 currentStates = initialStates
-tungstenTemp = 3000
-tungstenTemps = numpy.ones(len(timeSteps)) * tungstenTemp
 
 reactorHeight = 8
 nitrogenFlow = 2.8
@@ -135,53 +143,32 @@ sensor = Sensor(293, 2.8)
 reactionIsOver = False
 tarYield = None
 
-tungstenTemps = numpy.zeros(len(timeSteps))
-feedbacks = numpy.zeros(len(timeSteps))
-errors = numpy.zeros(len(timeSteps))
-integralErrors = numpy.zeros(len(timeSteps))
-derivativeFeedbacks = numpy.zeros(len(timeSteps))
-setpoints = numpy.ones(len(timeSteps))
-
-tungstenHeatingRate = 200
-for index in range(len(setpoints)):
-  setpoints[index] = timeSteps[index] * tungstenHeatingRate + 293
-
 maxTungstenTemp = 3200
 minTungstenTemp = 293
 
-feedbacks[0] = 293
+fuzzyController = identifyFuzzyController(data)
+sensorSetpointIncreaseRate = 111.67
 
-controller = PidController()
-controller.setParams(3, 16, 3)
+
+
+tungstenHeatingRate = fuzzyController.evaluate([sensorSetpointIncreaseRate, biomassMass])
 for index in range(len(timeSteps) - 1):
   deltaTime = timeSteps[index+1] - timeSteps[index]
-  errors[index] = setpoints[index] - feedbacks[index]
-  error = errors[index]
-  if index >= 1:
-    derivativeFeedbacks[index] = (feedbacks[index] - feedbacks[index-1]) / deltaTime
-    integralErrors[index] = integralErrors[index-1] + errors[index] * deltaTime
 
-  evaluated = controller.evaluate(
-    tungstenTemps[0],
-    errors[index],
-    integralErrors[index],
-    derivativeFeedbacks[index]
-  )
-  tungstenTemps[index] = evaluated
+  solidMass = m1 + m2 + m3 + m4 + m5 + m6 + m9
+  tungstenTemp = initialTemp + tungstenHeatingRate * timeSteps[index]
 
-  if tungstenTemps[index] > maxTungstenTemp:
-    tungstenTemps[index] = maxTungstenTemp
-    integralErrors[index] = integralErrors[index] - errors[index] * deltaTime
-  elif tungstenTemps[index] < minTungstenTemp:
-    tungstenTemps[index] = minTungstenTemp
-    integralErrors[index] = integralErrors[index] - errors[index] * deltaTime
+  if tungstenTemp > maxTungstenTemp:
+    tungstenTemp = maxTungstenTemp
+  elif tungstenTemp < minTungstenTemp:
+    tungstenTemp = minTungstenTemp
 
   currentTimeStep = [
     timeSteps[index],
     timeSteps[index + 1]
   ]
   output = odeint(odes, currentStates, currentTimeStep, args=(
-    tungstenTemps[index],
+    tungstenTemp,
     293
   ))[-1]
 
@@ -210,7 +197,7 @@ for index in range(len(timeSteps) - 1):
   sensor.update(
     actualTemp[index+1],
     temperatureHistory,
-    tungstenTemps[index],
+    tungstenTemp,
     timeSteps[index]
   )
   temperatureHistory.append({
@@ -234,10 +221,6 @@ for log in logs:
   sensorTempLogs.append(log["sensor"])
   tungstenTempLogs.append(log["tungsten"])
   timeLogs.append(log["time"])
-
-controllerLogs = controller.getLogs()
-controllerParams = controller.getParams()
-
 
 # Display the results
 print('Final tar yield: ' + str(tarYield['yield']) + ' kg, at t=' + str(tarYield['time']))

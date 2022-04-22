@@ -4,10 +4,15 @@ import matplotlib.pyplot as plot
 import numpy
 
 def addModelDataHeaders(excelSheet):
-  excelSheet.write(0, 0, 'Tar yield (kg)')
+  excelSheet.write(0, 0, 'Sensor heating rate (K/s)')
   excelSheet.write(0, 1, 'Tungsten heating rate (K/s)')
   excelSheet.write(0, 2, 'Initial biomass mass (kg)')
 
+def addModelYieldHeaders(sheet):
+  sheet.write(0, 0, 'Tar yield (kg)')
+  sheet.write(0, 1, 'Yield (%)')
+  sheet.write(0, 2, 'Tungsten heating rate (K/s)')
+  sheet.write(0, 3, 'Initial biomass mass (kg)')
 
 
 def annot_max(x, y, ax=None):

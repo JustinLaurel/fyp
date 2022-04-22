@@ -1,9 +1,9 @@
 from tkinter import CURRENT
 import numpy
 import pandas as pandas
-from model import evaluate
+from reactor_pidControl import evaluate
 from helpers import *
-from model import generateFuzzyRules
+from reactor_pidControl import generateFuzzyRules
 import xlsxwriter
 
 fuzzyRules = generateFuzzyRules()

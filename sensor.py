@@ -34,7 +34,7 @@ class Sensor():
     dTsensor_dt = self.computeChange(innerTemp, innerTempHistory, t)
     change = 0
     if len(innerTempHistory) > 1:
-      if t > innerTempHistory[-1]['time']:
+      if t >= innerTempHistory[-1]['time']:
         change = dTsensor_dt * (t-innerTempHistory[-1]['time'])
         if (abs(change) > 80): return innerTempHistory[-1]['innerTemp']
         self.sensorTemp += change

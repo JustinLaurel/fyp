@@ -2,13 +2,13 @@ import random
 from scipy.integrate import odeint
 import numpy as numpy
 from math import exp
-from services.helpers import addModelDataHeaders
+from services.helpers import addModelYieldHeaders
 from services.helpers import *
 from services.constants import *
 from sensor import Sensor
 import xlsxwriter
 
-DATASET_SIZE = 1000
+DATASET_SIZE = 20
 tungstenHeatingRateRange = [700, 2000]
 biomassMassRange = [25, 60]
 
@@ -106,13 +106,13 @@ def odes(
 reactorHeight = 8
 nitrogenFlow = 2.8
 
-book = xlsxwriter.Workbook('model_data.xlsx')
+book = xlsxwriter.Workbook('yield_data.xlsx')
 sheet1 = book.add_worksheet("datasetA")
 sheet2 = book.add_worksheet("datasetB")
 sheet3 = book.add_worksheet("main")
-addModelDataHeaders(sheet1)
-addModelDataHeaders(sheet2)
-addModelDataHeaders(sheet3)
+addModelYieldHeaders(sheet1)
+addModelYieldHeaders(sheet2)
+addModelYieldHeaders(sheet3)
 row1 = 1
 row2 = 1
 row3 = 1
@@ -157,7 +157,7 @@ for index in range(DATASET_SIZE):
 
   sensor = Sensor(293, 2.8)
   reactionIsOver = False
-  tarYield = None
+  tarYield = {'yield': 0, 'time': 0}
 
   maxTungstenTemp = 3200
   minTungstenTemp = 293
@@ -223,32 +223,36 @@ for index in range(DATASET_SIZE):
   sensorHeatingRate = (finalSensorTemp-293)/finalTime
 
   # Write to excel
+  yieldPercent = tarYield['yield'] / biomassMass
   if (alternatingIndex % 2 == 0):
-    sheet1.write(row3, 0, tungstenHeatingRate)
-    sheet1.write(row3, 1, sensorHeatingRate)
-    sheet1.write(row3, 2, biomassMass)
+    sheet1.write(row1, 0, tarYield['yield'])
+    sheet1.write(row1, 1, yieldPercent)
+    sheet1.write(row1, 2, tungstenHeatingRate)
+    sheet1.write(row1, 3, biomassMass)
 
-    datasetA.append([tungstenHeatingRate, sensorHeatingRate, biomassMass])
+    datasetA.append([tarYield, yieldPercent, tungstenHeatingRate, biomassMass])
     row1 += 1
   else:
-    sheet3.write(row3, 0, tungstenHeatingRate)
-    sheet3.write(row3, 1, sensorHeatingRate)
-    sheet3.write(row3, 2, biomassMass)
+    sheet2.write(row2, 0, tarYield['yield'])
+    sheet2.write(row2, 1, yieldPercent)
+    sheet2.write(row2, 2, tungstenHeatingRate)
+    sheet2.write(row2, 3, biomassMass)
 
-    datasetB.append([tungstenHeatingRate, sensorHeatingRate, biomassMass])
+    datasetB.append([tarYield, yieldPercent, tungstenHeatingRate, biomassMass])
     row2 += 1
 
   alternatingIndex += 1
-  sheet3.write(row3, 0, tungstenHeatingRate)
-  sheet3.write(row3, 1, sensorHeatingRate)
-  sheet3.write(row3, 2, biomassMass)
+  sheet3.write(row3, 0, tarYield['yield'])
+  sheet3.write(row3, 1, yieldPercent)
+  sheet3.write(row3, 2, tungstenHeatingRate)
+  sheet3.write(row3, 3, biomassMass)
   row3 += 1
 
   print('rows processed: ' + str(row3))
 
   # Reset globals
   reactionIsOver = False
-  tarYield = None
+  tarYield = {'yield': 0, 'time': 0}
   temperatureHistory = []
 
 book.close()

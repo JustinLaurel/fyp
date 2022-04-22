@@ -14,18 +14,15 @@ fuzzyPremises = generateFuzzyPremises()
 # data = pandas.read_excel(file, 'main').values
 
 # Modify indexing constants for your inputs and output in excel file
-SENSOR_HEATING_RATE = 1
-BIOMASS_MASS = 2
+BIOMASS_MASS = 3
 
-TUNGSTEN_HEATING_RATE = 0 # Controller output
+TUNGSTEN_HEATING_RATE = 2 # Controller output
 # Modify indexing constants end here
 
 def calcXRow(datum, fuzzyPremises):
   # Modify to access all input variables you want in your fuzzy model here
-  sensorHeatingRate = datum[SENSOR_HEATING_RATE]
   biomassMass = datum[BIOMASS_MASS]
   inputValues = [
-    datum[SENSOR_HEATING_RATE],
     datum[BIOMASS_MASS]
   ]
   # Modify input variable access ends here
@@ -50,12 +47,7 @@ def calcXRow(datum, fuzzyPremises):
   for beta in betaValues:
     X_row.append(beta)
   for beta in betaValues:
-    X_row.append(beta * sensorHeatingRate)
-  for beta in betaValues:
     X_row.append(beta * biomassMass)
-  # for beta in betaValues:
-  #   X_row.append(beta * INSERT_VARIABLE_HERE)
-
   # Modify end
 
   return X_row
@@ -104,18 +96,16 @@ def identifyFuzzyController(data):
   index = 0
   consequentParamsList = []
 
-  # Modify: range interval to access P is the total number of possible permutations of membership functions
+  # Modify: range interval to access P is the total number of possible permutations of all premise membership functions
   # eg: You have 3 input variables, one with 3 MFs and two with 5 MFs. Then the interval is 3*5*5=75
-  intercepts = P[:25]
-  sensorHeatingRate = P[25:50]
-  biomassMass = P[50:75]
-  # NEW_INPUT_VARIABLE = P[75:100]
+  intercepts = P[:7]
+  biomassMass = P[7:14]
+  # Modify ends here
 
   for param in intercepts:
     consequentParamsList.append(
       [
         intercepts[index][0],
-        sensorHeatingRate[index][0],
         biomassMass[index][0],
         # NEW_INPUT_VARIABLE[index][0],
       ]

@@ -1,6 +1,5 @@
 import math
 
-
 class FuzzySet:
   def __init__(this, leftX, middleX, rightX):
     this.leftX = leftX
@@ -113,8 +112,10 @@ class FuzzyController:
       totalOutput += ruleOutput * firingStrength
       totalFiringStrength += firingStrength
 
+    if totalFiringStrength == 0: return 0
     output = totalOutput / totalFiringStrength
-    if math.isnan(output): raise Exception('Too many input variables to fuzzy controller')
+    
+    if math.isnan(output): raise Exception('Too many arguments to fuzzy controller')
     return output
 
 

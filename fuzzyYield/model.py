@@ -29,20 +29,15 @@ def generateFuzzyPremises():
   fuzzyPremises = []
 
   # Modifications start here
-  for sensorHeatingRateSet in sensorHeatingRateSets:
-    for biomassMassSet in biomassMassFuzzySets:
-      fuzzyPremises.append(FuzzyPremise([sensorHeatingRateSet, biomassMassSet]))
+  for biomassMassSet in biomassMassFuzzySets:
+    fuzzyPremises.append(FuzzyPremise([biomassMassSet]))
   # Modifications end here
 
   return fuzzyPremises
 
 # Modify input fuzzy sets here
-sensorHeatingRateSets = generateFuzzySets(
-  [20, 120],
-  5
-)
 biomassMassFuzzySets = generateFuzzySets(
   [25, 60],
-  5
+  7
 )
 #Modifications end here

@@ -29,19 +29,24 @@ class PidController():
       self.derivativeConstant
     ]
 
-  def setParams(self, gain, integralConstant, derivativeConstant = None):
+  def setParams(self, gain, integralConstant = None, derivativeConstant = None):
     self.gain = gain
     self.integralConstant = integralConstant
     self.derivativeConstant = derivativeConstant
 
   def evaluate(self, initialOutput, error, integralError, differentialError):
     proportional = self.gain * error
-    integral = self.gain / self.integralConstant * integralError
+    integral = 0
     derivative = 0
+
+    if self.integralConstant is not None:
+      integral = self.gain / self.integralConstant * integralError
     if self.derivativeConstant is not None: 
       derivative = -self.gain * self.derivativeConstant * differentialError
     
     output = initialOutput + proportional + integral + derivative
+    print('output= ' + str(output) + ', proportional= ' + str(proportional) + ', integral= ' + str(integral) + ', derivative= ' + str(derivative))
+
     self.logs.append([output, proportional, integral, derivative])
 
     return output
